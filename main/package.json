@@ -4,7 +4,7 @@
   "description": "Week-12 Challenge (SQL): A command line application for business owners to view, add, and manage the departments, roles, and employees within a company database.",
   "main": "server.js",
   "scripts": {
-    "start": "node server",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

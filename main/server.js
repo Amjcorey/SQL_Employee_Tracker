@@ -7,17 +7,17 @@ const db = mysql.createConnection(
   {
     host: "127.0.0.1",
     user: "root",
-    //get password from .env file
+    //Retrieve password from .env 
     password: process.env.DB_PASSWORD,
     database: "employees_db",
   },
   console.log(`Connected to employee database.`)
 );
 
-db.connect(function (err) {
-  if (err) throw err;
-  console.log("connected!");
-});
+// db.connect(function (err) {
+//   if (err) throw err;
+//   console.log("connected!");
+// });
 
 // Function written to prompt user with different options to navigate the database on start
 function startApp() {
@@ -43,9 +43,11 @@ function startApp() {
         name: "employeeTracker",
       },
     ])
+
     // Takes in user choice
-    .then((response) => {
-      switch (response.action) {
+    
+    .then((answers) => {
+      switch (answers.action) {
         case "View All Departments":
           viewDepartments();
           break;
@@ -80,6 +82,7 @@ function startApp() {
           deleteEmployee();
           break;
       }
+      return;
     });
 }
 
@@ -94,7 +97,6 @@ function viewDepartments() {
 }
 
 // View all roles
-
 function viewRoles() {
   db.query("SELECT * FROM role", function (results) {
     console.table(results);
@@ -127,11 +129,11 @@ function addDepartment() {
         message: "What department would you like to add?",
       },
     ])
-    .then((response) => {
+    .then((answers) => {
       // Takes in user input
       db.query(
         "INSERT INTO department SET ?",
-        { name: response.department },
+        { name: answers.department },
         function (results) {
           console.log("Department added.");
           viewDepartments();
@@ -170,13 +172,13 @@ function addRole() {
           choices: departmentList,
         },
       ])
-      .then((response) => {
+      .then((answers) => {
         db.query(
           "INSERT INTO role SET ?",
           {
-            title: response.title,
-            salary: response.salary,
-            department_id: response.department_id,
+            title: answers.title,
+            salary: answers.salary,
+            department_id: answers.department_id,
           },
           function (results) {
             console.log("Role added.");
@@ -216,14 +218,14 @@ function addEmployee() {
           choices: roleList,
         },
       ])
-      .then((response) => {
+      .then((answers) => {
         // Takes in user input
         db.query(
           "INSERT INTO employee SET ?",
           {
-            first_name: response.first_name,
-            last_name: response.last_name,
-            role_id: response.role_id,
+            first_name: answers.first_name,
+            last_name: answers.last_name,
+            role_id: answers.role_id,
           },
           function (results) {
             console.log("Employee added.");
@@ -268,10 +270,10 @@ function updateRole() {
             choices: roleList,
           },
         ])
-        .then((response) => {
+        .then((answers) => {
           db.query(
             "UPDATE employee SET role_id = ? WHERE id = ?",
-            [response.role_id, response.employee_id],
+            [answers.role_id, answers.employee_id],
             function (results) {
               console.log("Employee role updated.");
               startApp();
@@ -305,11 +307,11 @@ function updateManager() {
           message: "What is the employee's new manager ID?",
         },
       ])
-      .then((response) => {
+      .then((answers) => {
         // Take in user input
         db.query(
           "UPDATE employee SET manager_id = ? WHERE id = ?",
-          [response.manager_id, response.employee_id],
+          [answers.manager_id, answers.employee_id],
           function (results) {
             console.log("Employee manager updated.");
             startApp();
@@ -339,10 +341,10 @@ function deleteDepartment() {
           choices: departmentList,
         },
       ])
-      .then((response) => {
+      .then((answers) => {
         db.query(
           "DELETE FROM department WHERE id = ?",
-          response.id,
+          answers.id,
           function (results) {
             console.log("Department deleted.");
             startApp();
@@ -371,10 +373,10 @@ function deleteRole() {
           choices: roleList,
         },
       ])
-      .then((response) => {
+      .then((answers) => {
         db.query(
           "DELETE FROM role WHERE id = ?",
-          response.id,
+          answers.id,
           function (results) {
             console.log("Role successfully deleted.");
             startApp();
@@ -402,10 +404,10 @@ function deleteEmployee() {
           choices: employeeList,
         },
       ])
-      .then((response) => {
+      .then((answers) => {
         db.query(
           "DELETE FROM employee WHERE id = ?",
-          response.id,
+          answers.id,
           function (results) {
             console.log("Employee successfully deleted.");
             startApp();
