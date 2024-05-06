@@ -14,7 +14,7 @@ const db = mysql.createConnection(
   console.log(`Connected to employee database.`)
 );
 
-// Function written to prompt the user with different options to navigate the database
+// Function written to prompt user with different options to navigate the database on start
 function startApp() {
   inquirer
     .prompt([
@@ -112,14 +112,123 @@ function viewEmployees() {
 // -------------- ADD -----------------
 
 // Add department
+function addDepartment() {
+  // Prompts user for name of new department
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "department",
+        message: "What department would you like to add?",
+      },
+    ])
+    .then((response) => {
+      // Takes in user input
+      db.query(
+        "INSERT INTO department SET ?",
+        { name: response.department },
+        function (err, results) {
+          console.log("Department added.");
+          viewDepartments();
+        }
+      );
+    });
+}
 
 // Add role
+function addRole() {
+  db.query("SELECT * FROM department", function (err, results) {
+    const departmentList = results.map((department) => {
+      return {
+        name: department.name,
+        value: department.id,
+      };
+    });
+    // Prompts user for role name, salary, and corresponding department
 
-// Prompts user for new role name, salary, and corresponding department
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          name: "title",
+          message: "What role would you like to add?",
+        },
+        {
+          type: "input",
+          name: "salary",
+          message: "What is the salary for this role?",
+        },
+        {
+          type: "list",
+          name: "department_id",
+          message: "What is the department ID for this role?",
+          choices: departmentList,
+        },
+      ])
+      .then((response) => {
+        db.query(
+          "INSERT INTO role SET ?",
+          {
+            title: response.title,
+            salary: response.salary,
+            department_id: response.department_id,
+          },
+          function (err, results) {
+            console.log("Role added.");
+            viewRoles();
+          }
+        );
+      });
+  });
+}
 
 // Add employee
+function addEmployee() {
+  db.query("SELECT * FROM role", function (err, results) {
+    const roleList = results.map((role) => {
+      return {
+        name: role.title,
+        value: role.id,
+      };
+    });
+    inquirer
+      .prompt([
+        // Prompts user for first name, last name, role, and corresponding manager
+        {
+          type: "input",
+          name: "first_name",
+          message: "What is the employee's first name?",
+        },
+        {
+          type: "input",
+          name: "last_name",
+          message: "What is the employee's last name?",
+        },
+        {
+          type: "list",
+          name: "role_id",
+          message: "What is the employee's role ID?",
+          choices: roleList,
+        },
+      ])
+      .then((response) => {
+        // Takes in user input
+        db.query(
+          "INSERT INTO employee SET ?",
+          {
+            first_name: response.first_name,
+            last_name: response.last_name,
+            role_id: response.role_id,
+          },
+          function (err, results) {
+            console.log("Employee added.");
+            viewEmployees();
+          }
+        );
+      });
+  });
+}
 
-// Prompts user for first name, last name, role, and corresponding manager
 
 // -------------- UPDATE -----------------
 
