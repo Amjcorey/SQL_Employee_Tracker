@@ -14,6 +14,11 @@ const db = mysql.createConnection(
   console.log(`Connected to employee database.`)
 );
 
+db.connect(function (err) {
+  if (err) throw err;
+  console.log("connected!");
+});
+
 // Function written to prompt user with different options to navigate the database on start
 function startApp() {
   inquirer
@@ -30,10 +35,10 @@ function startApp() {
           "Add Role",
           "Add Employee",
           "Update Employee Role",
-          "Update an employee manager",
-          "Delete departments",
-          "Delete roles",
-          "Delete employees",
+          "Update Employee Manager",
+          "Delete Department",
+          "Delete Role",
+          "Delete Employee",
         ],
         name: "employeeTracker",
       },
@@ -41,37 +46,37 @@ function startApp() {
     // Takes in user choice
     .then((response) => {
       switch (response.action) {
-        case "View all departments":
+        case "View All Departments":
           viewDepartments();
           break;
-        case "View all roles":
+        case "View All Roles":
           viewRoles();
           break;
-        case "View all employees":
+        case "View All Employees":
           viewEmployees();
           break;
-        case "Add a department":
+        case "Add Department":
           addDepartment();
           break;
-        case "Add a role":
+        case "Add Role":
           addRole();
           break;
-        case "Add an employee":
+        case "Add Employee":
           addEmployee();
           break;
-        case "Update an employee role":
+        case "Update Employee Role":
           updateRole();
           break;
-        case "Update an employee manager":
+        case "Update Employee Manager":
           updateManager();
           break;
-        case "Delete departments":
+        case "Delete Department":
           deleteDepartment();
           break;
-        case "Delete roles":
+        case "Delete Role":
           deleteRole();
           break;
-        case "Delete employees":
+        case "Delete Employee":
           deleteEmployee();
           break;
       }
