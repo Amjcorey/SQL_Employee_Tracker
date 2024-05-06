@@ -82,7 +82,7 @@ function startApp() {
 
 // View all departments
 function viewDepartments() {
-  db.query("SELECT * FROM department", function (err, results) {
+  db.query("SELECT * FROM department", function (results) {
     console.table(results);
     startApp();
   });
@@ -91,7 +91,7 @@ function viewDepartments() {
 // View all roles
 
 function viewRoles() {
-  db.query("SELECT * FROM role", function (err, results) {
+  db.query("SELECT * FROM role", function (results) {
     console.table(results);
     startApp();
   });
@@ -102,7 +102,7 @@ function viewEmployees() {
   // join salary based on role_id
   db.query(
     "SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, manager_id, department.name AS department FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id",
-    function (err, results) {
+    function (results) {
       console.table(results);
       startApp();
     }
@@ -127,7 +127,7 @@ function addDepartment() {
       db.query(
         "INSERT INTO department SET ?",
         { name: response.department },
-        function (err, results) {
+        function (results) {
           console.log("Department added.");
           viewDepartments();
         }
@@ -137,7 +137,7 @@ function addDepartment() {
 
 // Add role
 function addRole() {
-  db.query("SELECT * FROM department", function (err, results) {
+  db.query("SELECT * FROM department", function (results) {
     const departmentList = results.map((department) => {
       return {
         name: department.name,
@@ -173,7 +173,7 @@ function addRole() {
             salary: response.salary,
             department_id: response.department_id,
           },
-          function (err, results) {
+          function (results) {
             console.log("Role added.");
             viewRoles();
           }
@@ -184,7 +184,7 @@ function addRole() {
 
 // Add employee
 function addEmployee() {
-  db.query("SELECT * FROM role", function (err, results) {
+  db.query("SELECT * FROM role", function (results) {
     const roleList = results.map((role) => {
       return {
         name: role.title,
@@ -220,7 +220,7 @@ function addEmployee() {
             last_name: response.last_name,
             role_id: response.role_id,
           },
-          function (err, results) {
+          function (results) {
             console.log("Employee added.");
             viewEmployees();
           }
@@ -229,18 +229,185 @@ function addEmployee() {
   });
 }
 
-
 // -------------- UPDATE -----------------
 
-// Update an employee role
-// Prompts user to select employee whose role will be updated, and new role of said employee
+// Update employee role
+function updateRole() {
+  db.query("SELECT * FROM employee", function (results) {
+    const employeeList = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
+    });
+    db.query("SELECT * FROM role", function (results) {
+      const roleList = results.map((role) => {
+        return {
+          name: role.title,
+          value: role.id,
+        };
+      });
+      // Prompts user to select employee to update and new role
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "employee_id",
+            message: "Which employee would you like to update?",
+            choices: employeeList,
+          },
+          {
+            type: "list",
+            name: "role_id",
+            message: "What is the employee's new role?",
+            choices: roleList,
+          },
+        ])
+        .then((response) => {
+          db.query(
+            "UPDATE employee SET role_id = ? WHERE id = ?",
+            [response.role_id, response.employee_id],
+            function (results) {
+              console.log("Employee role updated.");
+              startApp();
+            }
+          );
+        });
+    });
+  });
+}
 
-// Update an employee manage
+// Update an employee manager
+function updateManager() {
+  db.query("SELECT * FROM employee", function (results) {
+    const employeeList = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
+    });
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "employee_id",
+          message: "Which employee would you like to update?",
+          choices: employeeList,
+        },
+        {
+          type: "input",
+          name: "manager_id",
+          message: "What is the employee's new manager ID?",
+        },
+      ])
+      .then((response) => {
+        // Take in user input
+        db.query(
+          "UPDATE employee SET manager_id = ? WHERE id = ?",
+          [response.manager_id, response.employee_id],
+          function (results) {
+            console.log("Employee manager updated.");
+            startApp();
+          }
+        );
+      });
+  });
+}
 
 // -------------- REMOVE -----------------
 
+// Delete departments
+function deleteDepartment() {
+  db.query("SELECT * FROM department", function (results) {
+    const departmentList = results.map((department) => {
+      return {
+        name: department.name,
+        value: department.id,
+      };
+    });
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "id",
+          message: "Which department would you like to delete?",
+          choices: departmentList,
+        },
+      ])
+      .then((response) => {
+        db.query(
+          "DELETE FROM department WHERE id = ?",
+          response.id,
+          function (results) {
+            console.log("Department deleted.");
+            startApp();
+          }
+        );
+      });
+  });
+}
+
 // Delete roles
 
+function deleteRole() {
+  db.query("SELECT * FROM role", function (results) {
+    const roleList = results.map((role) => {
+      return {
+        name: role.title,
+        value: role.id,
+      };
+    });
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "id",
+          message: "Which role would you like to delete?",
+          choices: roleList,
+        },
+      ])
+      .then((response) => {
+        db.query(
+          "DELETE FROM role WHERE id = ?",
+          response.id,
+          function (results) {
+            console.log("Role successfully deleted.");
+            startApp();
+          }
+        );
+      });
+  });
+}
+
 // Delete employees
+function deleteEmployee() {
+  db.query("SELECT * FROM employee", function (results) {
+    const employeeList = results.map((employee) => {
+      return {
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      };
+    });
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "id",
+          message: "Which employee would you like to delete?",
+          choices: employeeList,
+        },
+      ])
+      .then((response) => {
+        db.query(
+          "DELETE FROM employee WHERE id = ?",
+          response.id,
+          function (results) {
+            console.log("Employee successfully deleted.");
+            startApp();
+          }
+        );
+      });
+  });
+}
 
 startApp();
