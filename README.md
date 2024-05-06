@@ -16,4 +16,4 @@ Week-12 Challenge (SQL): A command line application for business owners to view,
 - Once all dependencies are installed, you will need to create the database. To do this you will need to navigate to the directory db directory containing the schema.sql file. Once there, you will need to open up a MySQL shell to run the command source schema.sql.    
  
 
-
+![screenshot1-wk-12](<img/Screenshot 2024-05-06 003029.png>)
