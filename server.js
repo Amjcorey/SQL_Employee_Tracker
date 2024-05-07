@@ -1,32 +1,22 @@
+const { Department, Role, Employee } = require("./lib");
+const db = require("./config/connection");
 const inquirer = require("inquirer");
-// Import and require mysql2
-const mysql = require("mysql2");
-require("dotenv").config();
+const mysqlServer = require("mysql-server");
 
-const db = mysql.createConnection(
-  {
-    host: "127.0.0.1",
-    user: "root",
-    //Retrieve password from .env 
-    password: process.env.DB_PASSWORD,
-    database: "employees_db",
-  },
-  console.log(`Connected to employee database.`)
-);
-
-// db.connect(function (err) {
-//   if (err) throw err;
-//   console.log("connected!");
-// });
+// Syncs the database with created models
+sequelize.sync({ force: false }).then(() => {
+  init();
+});
 
 // Function written to prompt user with different options to navigate the database on start
-function startApp() {
-  inquirer
+// initiate the program with main prompt
+async function init() {
+  await inquirer
     .prompt([
       {
         type: "list",
         name: "action",
-        message: "Select a database",
+        message: "Select a database to view or make changes",
         choices: [
           "View All Departments",
           "View All Roles",
@@ -38,47 +28,43 @@ function startApp() {
           "Update Employee Manager",
           "Delete Department",
           "Delete Role",
-          "Delete Employee",
+          "Delete Employee(s)",
         ],
-        name: "employeeTracker",
       },
     ])
-
-    // Takes in user choice
-    
-    .then((answers) => {
-      switch (answers.action) {
-        case "View All Departments":
+    .then((answer) => {
+      switch (answer.action) {
+        case "View all departments":
           viewDepartments();
           break;
-        case "View All Roles":
+        case "View all roles":
           viewRoles();
           break;
-        case "View All Employees":
+        case "View all employees":
           viewEmployees();
           break;
-        case "Add Department":
+        case "Add a department":
           addDepartment();
           break;
-        case "Add Role":
+        case "Add a role":
           addRole();
           break;
-        case "Add Employee":
+        case "Add an employee":
           addEmployee();
           break;
-        case "Update Employee Role":
+        case "Update an employee role":
           updateRole();
           break;
-        case "Update Employee Manager":
+        case "Update an employee manager":
           updateManager();
           break;
-        case "Delete Department":
+        case "Delete departments":
           deleteDepartment();
           break;
-        case "Delete Role":
+        case "Delete roles":
           deleteRole();
           break;
-        case "Delete Employee":
+        case "Delete employees":
           deleteEmployee();
           break;
       }
@@ -90,17 +76,17 @@ function startApp() {
 
 // View all departments
 function viewDepartments() {
-  db.query("SELECT * FROM department", function (results) {
+  db.query("SELECT * FROM department", function (err, results) {
     console.table(results);
-    startApp();
+    init();
   });
 }
 
 // View all roles
 function viewRoles() {
-  db.query("SELECT * FROM role", function (results) {
+  db.query("SELECT * FROM role", function (err, results) {
     console.table(results);
-    startApp();
+    init();
   });
 }
 
@@ -111,7 +97,7 @@ function viewEmployees() {
     "SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, manager_id, department.name AS department FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id",
     function (results) {
       console.table(results);
-      startApp();
+      init();
     }
   );
 }
@@ -134,7 +120,7 @@ function addDepartment() {
       db.query(
         "INSERT INTO department SET ?",
         { name: answers.department },
-        function (results) {
+        function (err, results) {
           console.log("Department added.");
           viewDepartments();
         }
@@ -144,8 +130,8 @@ function addDepartment() {
 
 // Add role
 function addRole() {
-  db.query("SELECT * FROM department", function (results) {
-    const departmentList = results.map((department) => {
+  db.query("SELECT * FROM department", function (err, results) {
+    const departmentList = results.map(department => {
       return {
         name: department.name,
         value: department.id,
@@ -191,8 +177,8 @@ function addRole() {
 
 // Add employee
 function addEmployee() {
-  db.query("SELECT * FROM role", function (results) {
-    const roleList = results.map((role) => {
+  db.query("SELECT * FROM role", function (err, results) {
+    const roleList = results.map(role => {
       return {
         name: role.title,
         value: role.id,
@@ -240,15 +226,15 @@ function addEmployee() {
 
 // Update employee role
 function updateRole() {
-  db.query("SELECT * FROM employee", function (results) {
-    const employeeList = results.map((employee) => {
+  db.query("SELECT * FROM employee", function (err, results) {
+    const employeeList = results.map(employee => {
       return {
         name: `${employee.first_name} ${employee.last_name}`,
         value: employee.id,
       };
     });
-    db.query("SELECT * FROM role", function (results) {
-      const roleList = results.map((role) => {
+    db.query("SELECT * FROM role", function (err, results) {
+      const roleList = results.map(role => {
         return {
           name: role.title,
           value: role.id,
@@ -274,9 +260,9 @@ function updateRole() {
           db.query(
             "UPDATE employee SET role_id = ? WHERE id = ?",
             [answers.role_id, answers.employee_id],
-            function (results) {
+            function (err, results) {
               console.log("Employee role updated.");
-              startApp();
+              init();
             }
           );
         });
@@ -286,8 +272,8 @@ function updateRole() {
 
 // Update an employee manager
 function updateManager() {
-  db.query("SELECT * FROM employee", function (results) {
-    const employeeList = results.map((employee) => {
+  db.query("SELECT * FROM employee", function (err, results) {
+    const employeeList = results.map(employee => {
       return {
         name: `${employee.first_name} ${employee.last_name}`,
         value: employee.id,
@@ -312,9 +298,9 @@ function updateManager() {
         db.query(
           "UPDATE employee SET manager_id = ? WHERE id = ?",
           [answers.manager_id, answers.employee_id],
-          function (results) {
+          function (err, results) {
             console.log("Employee manager updated.");
-            startApp();
+            init();
           }
         );
       });
@@ -325,8 +311,8 @@ function updateManager() {
 
 // Delete departments
 function deleteDepartment() {
-  db.query("SELECT * FROM department", function (results) {
-    const departmentList = results.map((department) => {
+  db.query("SELECT * FROM department", function (err, results) {
+    const departmentList = results.map(department => {
       return {
         name: department.name,
         value: department.id,
@@ -345,9 +331,9 @@ function deleteDepartment() {
         db.query(
           "DELETE FROM department WHERE id = ?",
           answers.id,
-          function (results) {
+          function (err, results) {
             console.log("Department deleted.");
-            startApp();
+            init();
           }
         );
       });
@@ -357,8 +343,8 @@ function deleteDepartment() {
 // Delete roles
 
 function deleteRole() {
-  db.query("SELECT * FROM role", function (results) {
-    const roleList = results.map((role) => {
+  db.query("SELECT * FROM role", function (err, results) {
+    const roleList = results.map(role => {
       return {
         name: role.title,
         value: role.id,
@@ -377,9 +363,9 @@ function deleteRole() {
         db.query(
           "DELETE FROM role WHERE id = ?",
           answers.id,
-          function (results) {
+          function (err, results) {
             console.log("Role successfully deleted.");
-            startApp();
+            init();
           }
         );
       });
@@ -388,8 +374,8 @@ function deleteRole() {
 
 // Delete employees
 function deleteEmployee() {
-  db.query("SELECT * FROM employee", function (results) {
-    const employeeList = results.map((employee) => {
+  db.query("SELECT * FROM employee", function (err, results) {
+    const employeeList = results.map(employee => {
       return {
         name: `${employee.first_name} ${employee.last_name}`,
         value: employee.id,
@@ -408,13 +394,13 @@ function deleteEmployee() {
         db.query(
           "DELETE FROM employee WHERE id = ?",
           answers.id,
-          function (results) {
-            console.log("Employee successfully deleted.");
-            startApp();
+          function (err, results) {
+            console.log("Employee deleted.");
+            init();
           }
         );
       });
   });
 }
 
-startApp();
+init();
