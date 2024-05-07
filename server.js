@@ -1,13 +1,19 @@
-const { Department, Role, Employee } = require("./lib");
-const db = require("./config/connection");
+// const { Department, Role, Employee } = require("./lib");
+const mysql = require('mysql2');
 const inquirer = require("inquirer");
-const mysqlServer = require("mysql-server");
+require('dotenv').config();
 
-// Syncs the database with created models
-sequelize.sync({ force: false }).then(() => {
-  init();
-});
 
+const db = mysql.createConnection(
+  {
+    host: '127.0.0.1',
+    user: 'root',
+    //get password from .env file
+    password: process.env.DB_PASSWORD,
+    database: 'employees_db'
+  },
+  console.log("Connected to the employee database!")
+);
 // Function written to prompt user with different options to navigate the database on start
 // initiate the program with main prompt
 async function init() {
